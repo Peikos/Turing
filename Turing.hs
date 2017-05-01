@@ -108,29 +108,34 @@ update s dir (Tape l r) = case dir of
 
 -- * Running the machine and printing the results
 
--- | Run the Turing Machine on the tape, yielding either a final state and tape, or an error when δ is not total.
-run :: Turing-> Tape -> Either String (State, Tape)
-run tm tape | state `elem` final = Right (state, tape)
+-- | Run the Turing Machine on the tape, yielding a list of state/tape tuples culminating in either a final state and tape, or an error when δ is not total.
+run :: Turing-> Tape -> [Either String (State, Tape)]
+run tm tape | state `elem` final = [Right (state, tape)]
             | otherwise = case lookup (state, current tape) (δ tm) of
-                Just (newstate, newsymbol, dir) -> run (tm {q = newstate}) . update newsymbol dir $ tape
-                Nothing -> Left "missing rule in δ or unexpected state/symbol combination!"
+                Just (newstate, newsymbol, dir) -> let tape' = update newsymbol dir tape
+                                                   in  Right (state, tape) : (run (tm {q = newstate}) $ tape')
+                Nothing -> [Left "missing rule in δ or unexpected state/symbol combination!"]
   where state = q tm
         final = f tm
 
--- | Show the result of running Turing Machine tm on Tape tape.
-showResult :: Turing -> Tape -> String
-showResult tm tape = case run tm tape of
-  Right (result, tape') -> printf "%T ⇝ (%s, %T)\n\n" tape result tape'
-  Left error -> printf "Error: %s" error
+-- | Show the aggregated result of running Turing Machine tm on Tape tape.
+showResults :: Turing -> Tape -> String
+showResults tm = ("  " ++) . intercalate "\n⇝ " . map showResult . run tm
+
+-- | Show an intermediate result of running Turing Machine tm on Tape tape for a single step.
+showResult :: Either String (State, Tape) -> String
+showResult (Right (result, tape)) = printf "(%s, %T)" result tape
+showResult (Left error) = printf "Error: %s" error
 
 -- | Read a Turing Machine and tape from the command line and show the result. If no arguments are provided, the Machine and tape are read from the console.
 main = do
+  putStrLn ""
   args <- getArgs
   input <- if length args > 0
     then return $ unwords args
     else getLine
   case parse computation "" input of
-    Right computation -> putStrLn $ uncurry showResult computation
+    Right computation -> putStrLn $ uncurry showResults computation
     Left  error       -> print error
 
 -- * Utility
