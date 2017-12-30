@@ -85,7 +85,7 @@ blank = Sym '_'
 
 -- | Convert a list of symbols into a tape.
 fromList :: [Symbol] -> Tape
-fromList = Tape [] . (++ (repeat blank))
+fromList = Tape [blank] . (++ (repeat blank))
 
 -- | Move the tape to the right.
 right :: Tape -> Tape
