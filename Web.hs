@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
+{-# LANGUAGE CPP, FlexibleInstances, TypeSynonymInstances, OverloadedStrings #-}
 
 module Main where
 import Control.Applicative ((<$>), optional)
