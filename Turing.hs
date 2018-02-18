@@ -1,9 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | This module emulates a simple Turing Machine.
-module Main where
+module Turing where
 
-import System.Environment (getArgs)
 import Text.Printf (printf, fmtChar, fmtPrecision, formatArg, vFmt, formatString, errorBadFormat, PrintfArg)
 
 import Data.List (intercalate)
@@ -126,17 +125,6 @@ showResults tm = ("  " ++) . intercalate "\n⇝ " . map showResult . run tm
 showResult :: Either String (State, Tape) -> String
 showResult (Right (result, tape)) = printf "(%s, %T)" result tape
 showResult (Left error) = printf "Error: %s" error
-
--- | Read a Turing Machine and tape from the command line and show the result. If no arguments are provided, the Machine and tape are read from the console.
-main = do
-  putStrLn ""
-  args <- getArgs
-  input <- if length args > 0
-    then return $ unwords args
-    else getLine
-  case parse computation "" input of
-    Right computation -> putStrLn $ uncurry showResults computation
-    Left  error       -> print error
 
 -- * Utility
 

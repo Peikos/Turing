@@ -15,10 +15,20 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
-executable Turing
-  main-is:             Turing.hs
+library
   -- other-modules:
-  other-extensions:    GeneralizedNewtypeDeriving
+  exposed-modules: Turing
   build-depends:       base >=4.9 && <4.10, parsec >=3.1 && <3.2
-  -- hs-source-dirs:
+  default-language:    Haskell2010
+  other-extensions:    GeneralizedNewtypeDeriving
+
+executable TuringCLI
+  main-is:             CLI.hs
+  build-depends:       base >=4.9 && <4.10, parsec >=3.1 && <3.2
+  default-language:    Haskell2010
+
+executable TuringWeb
+  main-is:             Web.hs
+  other-extensions:    GeneralizedNewtypeDeriving
+  build-depends:       base >=4.9 && <4.10, parsec >=3.1 && <3.2, happstack-server, blaze-html >= 0.9, text >= 1.2
   default-language:    Haskell2010
