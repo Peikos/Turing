@@ -34,7 +34,7 @@ instance Show State where
 
 -- | States are read without any quotes or constructor.
 instance Read State where
-  readsPrec _ str = case parse st "" str of
+  readsPrec _ str = case parse state "" str of
     (Right state) -> [(state, "")]
     (Left _) -> []
 
@@ -150,28 +150,34 @@ computation = do spaces
                  optional newline
                  return (machine, input)
 
+states :: Parser [State]
+states = between (char '[') (char ']') (sepBy state sep)
+
+mappings :: Parser [((State, Symbol), (State, Symbol, Direction))]
+mappings = between (char '[') (char ']') (sepBy mapping sep)
+
 -- | Parses a Turing machine.
 tm :: Parser Turing
 tm = do char '<'
         spaces
-        q <- st
+        q <- state
         sep
-        f <- between (char '[') (char ']') (sepBy st sep)
+        f <- states
         sep
-        δ <- between (char '[') (char ']') (sepBy mapping sep)
+        δ <- mappings
         spaces
         char '>'
         return $ Turing δ q f
 
 -- | Parses a δ function.
 mapping :: Parser ((State, Symbol), (State, Symbol, Direction))
-mapping = do preState <- st
+mapping = do preState <- state
              spaces
              preSym <- sym
              spaces
              string "->" <|> string "→"
              spaces
-             postState <- st
+             postState <- state
              spaces
              postSym <- sym
              spaces
@@ -179,8 +185,8 @@ mapping = do preState <- st
              return ((preState, preSym), (postState, postSym, direction))
 
 -- | Parses a state.
-st :: Parser State
-st = St <$> many1 (alphaNum <|> char '_')
+state :: Parser State
+state = St <$> many1 (alphaNum <|> char '_')
 
 -- | Parses a symbol.
 sym :: Parser Symbol

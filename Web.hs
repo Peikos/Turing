@@ -5,6 +5,7 @@ import Control.Applicative ((<$>), optional)
 import Control.Monad (msum)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (fromMaybe)
+import Data.Monoid ((<>))
 import Data.Either (rights)
 import Data.Text (Text)
 import Data.Text.Lazy (unpack)
@@ -14,7 +15,7 @@ import Turing
 import Happstack.Server
 import Text.Parsec hiding (State(..))
 
-import Text.Blaze.Html5 (Html, a, p, toHtml, (!), Html, (!), form, input, label)
+import Text.Blaze.Html5 (Html, a, p, toHtml, (!), Html, (!), form, input, label, em)
 import Text.Blaze.Html5.Attributes (action, enctype, href, name, size, type_, value)
 
 import qualified Text.Blaze.Html5 as H
@@ -35,29 +36,47 @@ turingForm = msum [ viewForm, processForm] where
   viewForm :: ServerPart Response
   viewForm = do method GET
                 ok $ template "Turing" $ H.form ! action "/" ! enctype "multipart/form-data" ! A.method "POST" $ do
-                    p "Machine: < initial state, [final state, final state, ...], [mapping, ...] >"
-                    input ! A.id "machine" ! name "machine" ! value "<1, [E], [1 _ -> 1 _ L, 1 A -> 2 A L, 1 C -> 1 A R, 2 _ -> E A R, 2 A -> 2 B L]>"
+                    p $ "Initial state, e.g. " <> em "1"
+                    input ! A.id "initial" ! name "initial" ! value "1"
+                    p $ "Final stitates, e.g. " <> em "[A, B, C]"
+                    input ! A.id "final" ! name "final" ! value "[E]"
+                    p $ "Mapping, e.g. " <> em "[1 A -> 1 B R, ...]"
+                    input ! A.id "mapping" ! name "mapping" ! value "[1 _ -> 1 _ L, 1 A -> 2 A L, 1 C -> 1 A R, 2 _ -> E A R, 2 A -> 2 B L]"
+                    p $ "Tape, e.g. " <> em "Symbol Symbol ..."
                     input ! A.id "tape" ! name "tape" ! value "C C C"
-                    p "Tape: Symbol Symbol ..."
                     H.br
                     input ! type_ "submit" ! value "Probeer!"
 
   processForm :: ServerPart Response
   processForm = do method POST
-                   tm <- parseMachine "machine"
+                   i <- parseInitial "initial"
+                   fs <- parseFinals "final"
+                   ms <- parseMappings "mapping"
                    t <- parseTape "tape"
-                   liftIO $ print t
+                   liftIO $ print i
+                   liftIO $ print fs
+                   liftIO $ print ms
+                   let tm = Turing ms i fs
                    liftIO $ print tm
                    let results = finalTape tm t
                    ok $ template "Result" $ do
                      H.p $ toHtml $ showResults tm t
                      H.p $ toHtml $ results
 
-parseMachine :: String -> ServerPart Turing
-parseMachine = fmap (fromRight (Turing [] (St "Q") [St "Q"]) . parse tm "" . unpack) . lookText
+parseInput :: Parser a -> a -> String -> ServerPart a
+parseInput p d = fmap (fromRight d . parse p "" . unpack) . lookText
+
+parseInitial :: String -> ServerPart State
+parseInitial = parseInput state (St "Q")
+
+parseFinals :: String -> ServerPart [State]
+parseFinals = parseInput states [St "Q"]
+
+parseMappings :: String -> ServerPart [((State, Symbol), (State, Symbol, Direction))]
+parseMappings = parseInput mappings []
 
 parseTape :: String -> ServerPart Tape
-parseTape = fmap (fromRight (Tape [] []) . parse tape "" . unpack) . lookText
+parseTape = parseInput tape (Tape [] [])
 
 template :: Text -> Html -> Response
 template title body = toResponse $
