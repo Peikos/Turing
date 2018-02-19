@@ -60,7 +60,7 @@ data Tape = Tape [Symbol] [Symbol]
 
 -- | Tapes are printed as a single list of characters separated by spaces. A 'q' indicates the current head position, and a blank is added at the end to indicate the end of the tape.
 instance Show Tape where
-  show (Tape l r) = unwords $ map show l ++ "q" : (map show . takeWhile (not . (== blank)) $ r) ++ ["_"]
+  show (Tape l r) = unwords $ "_" : (map show . dropWhile (== blank) $ l) ++ "q" : (map show . takeWhile (not . (== blank)) . dropWhile (== blank) $ r) ++ ["_"]
 
 -- | Tapes are read the same way they are shown.
 instance Read Tape where
@@ -84,26 +84,33 @@ blank = Sym '_'
 
 -- | Convert a list of symbols into a tape.
 fromList :: [Symbol] -> Tape
-fromList = Tape [blank] . (++ (repeat blank))
+fromList = Tape []
 
 -- | Move the tape to the right.
 right :: Tape -> Tape
+right (Tape l []) = Tape (l ++ [blank]) []
 right (Tape l r) = Tape (l ++ [head r]) (tail r)
 
 -- | Move the tape to the left.
 left :: Tape -> Tape
+left (Tape [] r) = Tape [] (blank : r)
 left (Tape l r) = Tape (init l) (last l : r)
 
 -- | Read the current symbol on the tape.
 current :: Tape -> Symbol
+current (Tape _ []) = blank
 current (Tape _ r) = head r
+
+safeTail :: [Symbol] -> [Symbol]
+safeTail [] = []
+safeTail (_:ss) = ss
 
 -- | Replace the symbol on the current position, then move the tape left or right.
 update :: Symbol -> Direction -> Tape -> Tape
 update s dir (Tape l r) = case dir of
                             L -> left  tape'
                             R -> right tape'
-  where tape' = Tape l (s : tail r)
+  where tape' = Tape l (s : safeTail r)
 
 -- * Running the machine and printing the results
 
