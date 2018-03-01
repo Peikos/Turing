@@ -157,11 +157,14 @@ computation = do spaces
                  optional newline
                  return (machine, input)
 
+squareBrackets :: Parser a -> Parser a
+squareBrackets = between (spaces >> char '[' >> spaces) (spaces >> char ']' >> spaces)
+
 states :: Parser [State]
-states = between (char '[') (char ']') (sepBy state sep)
+states = squareBrackets $ sepBy state sep
 
 mappings :: Parser [((State, Symbol), (State, Symbol, Direction))]
-mappings = between (char '[') (char ']') (sepBy mapping sep)
+mappings = squareBrackets $ sepBy mapping sep
 
 -- | Parses a Turing machine.
 tm :: Parser Turing
@@ -189,6 +192,7 @@ mapping = do preState <- state
              postSym <- sym
              spaces
              direction <- direction
+             spaces
              return ((preState, preSym), (postState, postSym, direction))
 
 -- | Parses a state.
