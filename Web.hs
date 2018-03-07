@@ -40,7 +40,7 @@ turingForm = msum [ viewForm, processForm] where
                 ok $ template "Turing" $ H.form ! action "/" ! enctype "multipart/form-data" ! A.method "POST" $ do
                     p $ "Initial state, e.g. " <> em "1"
                     input ! A.id "initial" ! name "initial" ! value "1"
-                    p $ "Final stitates, e.g. " <> em "[A, B, C]"
+                    p $ "Final states, e.g. " <> em "[A, B, C]"
                     input ! A.id "final" ! name "final" ! value "[E]"
                     p $ "Mapping, e.g. " <> em "[1 A -> 1 B R, ...]"
                     textarea "[1 _ -> 1 _ L,\n1 A -> 2 A L,\n1 C -> 1 A R,\n2 _ -> E A R,\n2 A -> 2 B L]" ! A.id "mapping" ! name "mapping" ! A.rows "6"
