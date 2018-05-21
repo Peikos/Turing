@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, FlexibleInstances, TypeSynonymInstances, OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, OverloadedStrings #-}
 
 module Main where
 import Control.Applicative ((<$>), optional)
@@ -21,13 +21,13 @@ import Text.Blaze.Html5.Attributes (action, enctype, href, name, size, type_, va
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-#if defined(linux_HOST_OS)
-import qualified Data.ByteString.Char8 as B
-import qualified Text.Blaze.Html.Renderer.Utf8 as Blaze
-instance ToMessage Html where
-  toContentType _ = B.pack "text/html; charset=UTF-8"
-  toMessage       = Blaze.renderHtml
-#endif
+-- #if defined(linux_HOST_OS)
+--import qualified Data.ByteString.Char8 as B
+--import qualified Text.Blaze.Html.Renderer.Utf8 as Blaze
+--instance ToMessage Html where
+  --toContentType _ = B.pack "text/html; charset=UTF-8"
+  --toMessage       = Blaze.renderHtml
+-- #endif
 
 main :: IO ()
 main = do putStrLn "Starting server on port 9999 ..."
